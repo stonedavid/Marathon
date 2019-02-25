@@ -1,25 +1,20 @@
+
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
 Created on Sat Feb 23 08:03:51 2019
-
 Marathon is a program to automatically create a 50% microrhythm between two
 rhythmic patterns in MIDI.
-
 Maraton takes a MIDI file by the name "marathon_in.mid" located in the same
 folder as itself containing two MIDI tracks of same length and number of notes.
 Marathon then creates the file "marathon_out.mid" by calculating the average
 duration of each note pair in the two tracks and copying the channel, velocity,
 and pitch pattern of the first track.
-
 Known issues:
-
     —Does not work properly with chords and multiple voices on one track.
     —May behave unexpectedly with time signatures or tempo changes and other
         more complex actions.
-
 Suggestions:
-
     —Create simple MIDI files with a DAW to feed the program.
     —Create monophonic tracks. If you want multiphonic results, I suggest you
         create a MIDI file for each voice. Remember to write the same number of
@@ -28,7 +23,6 @@ Suggestions:
     —Tempo or time signature change, note bends, and other more complex actions
         are to be avoided for better results. You can apply those changes
         manually on the output track.
-
 @author: DaveTremblay
 """
 
@@ -70,22 +64,30 @@ if len(notes1)-1 == len(notes2):
     runningTickCounterB = 0
 
     for event in notes1:
+        print(event)
         if "Note" in event:
-            if event.split(", ")[-1] != "0]":
+            if "NoteOff" in event or event.split(", ")[-1] == "0]":
+                print("noteoff")
+                runningTickCounterA += int(event.split("tick=")[1].split(", channel")[0])
+                
+            else:
+                
                 runningTickCounterA += int(event.split("tick=")[1].split(", channel")[0])
                 onsetListA.append(runningTickCounterA)
                 pitchList.append(event.split("data=[")[1].split(", ")[0])
                 velList.append(event.split("data=[")[1].split(", ")[1].split("]")[0])
-            else:
-                runningTickCounterA += int(event.split("tick=")[1].split(", channel")[0])
 
     for event in notes2:
         if "Note" in event:
-            if event.split(", ")[-1] != "0]":
+            if "NoteOff" in event or event.split(", ")[-1] == "0]":
+
+                print("noteoff")
+                runningTickCounterB += int(event.split("tick=")[1].split(", channel")[0])
+                
+            else:
+
                 runningTickCounterB += int(event.split("tick=")[1].split(", channel")[0])
                 onsetListB.append(runningTickCounterB)
-            else:
-                runningTickCounterB += int(event.split("tick=")[1].split(", channel")[0])
 
     #
     # Interpolate onsets with weight ( 0.0 = )
@@ -144,26 +146,19 @@ else:
         if eventName == "NoteOnEvent" and event.split(", ")[-1] == "0]":
             tick1 = int(notes1[e].split("tick=")[1].split(", channel")[0])
             tick2 = int(notes2[e].split("tick=")[1].split(", channel")[0])
-
             tickm = int((w1 * tick1) + (w2 * tick2))
-
             cm = int(notes1[e].split("channel=")[1].split(", data")[0])
             dm1on = notes1[e-1].split("data=[")[1].split(", ")[0]
             dm1off = notes1[e].split("data=[")[1].split(", ")[0]
             dm2on = notes1[e-1].split("data=[")[1].split(", ")[1].split("]")[0]
             dm2off = notes1[e].split("data=[")[1].split(", ")[1].split("]")[0]
-
             noteon = midi.NoteOnEvent(tick=0, channel=cm, data=[int(dm1on), int(dm2on)])
             tra.append(noteon)
             noteoff = midi.NoteOffEvent(tick=tickm, channel=cm, data=[int(dm1off), int(dm2off)])
             tra.append(noteoff)
-
-
             e += 1
-
         else:
             e += 1
-
     trackend = midi.EndOfTrackEvent(tick=1)
     tra.append(trackend)
     midi.write_midifile(file_out, pat)""" 
