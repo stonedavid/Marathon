@@ -64,10 +64,8 @@ if len(notes1)-1 == len(notes2):
     runningTickCounterB = 0
 
     for event in notes1:
-        print(event)
         if "Note" in event:
             if "NoteOff" in event or event.split(", ")[-1] == "0]":
-                print("noteoff")
                 runningTickCounterA += int(event.split("tick=")[1].split(", channel")[0])
                 
             else:
@@ -81,7 +79,6 @@ if len(notes1)-1 == len(notes2):
         if "Note" in event:
             if "NoteOff" in event or event.split(", ")[-1] == "0]":
 
-                print("noteoff")
                 runningTickCounterB += int(event.split("tick=")[1].split(", channel")[0])
                 
             else:
